@@ -179,9 +179,9 @@ exports.newUser = (req, res) => {
   const { name, email, password, password2 } = req.body;
   let errors = [];
 
-  if (!name || !email || !password || !password2) {
-    errors.push({ msg: "Passwords do not match" });
-  }
+  // if (!name || !email || !password || !password2) {
+  //   errors.push({ msg: "Passwords do not match" });
+  // }
 
   if (password.length < 6) {
     errors.push({ msg: "Password must be at least 6 characters" });
@@ -238,3 +238,56 @@ exports.newUser = (req, res) => {
     });
   }
 };
+exports.loginUser = (req, res) =>{
+  const { email, password } = req.body;
+  let errors = [];
+  if (!email ) {
+    errors.push({ msg: "Enter email address" });
+  }
+  if(password.trim().length < 6){
+    errors.push({ msg: "Password must be at least 6 characters" });
+    res.json({
+      status: "error",
+      errors
+    });
+  }else{
+    Users.findOne({email: email})
+      .then(user => {
+        if (!user) {
+          errors.push({msg: "That email is not registered" })
+           res.json({
+              status: "error",
+              errors
+            });
+        }else{
+        // Match password
+        // compare existing passport and user passports
+        bcrypt.compare(password, user.password, (err, isMatch) => {
+          if (err){ 
+            errors.push({msg: "Something happend with server please try again!"});
+            res.json({
+              status: "error",
+              errors
+            })
+          }
+          if (isMatch) {
+            console.log(user['_doc']);
+            res.json({
+              status: "success",
+              id: user['_doc']._id,
+              name : user['_doc'].name,
+              email: user['_doc'].email,
+              date: user['_doc'].date
+            })
+          } else {
+            errors.push({ msg: "Password incorrect" });
+            res.json({
+              status: "error",
+              errors
+            })
+          }
+        });
+      }
+  });
+}
+}
