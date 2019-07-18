@@ -14,4 +14,6 @@ const controller = require("./contoller");
 
 router.post("/newUser", controller.newUser);
 
+router.post("/loginUser", controller.loginUser);
+
 module.exports = router;

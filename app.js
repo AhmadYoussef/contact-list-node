@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
 const port = 5000;
-const passport = require('passport');
+// const passport = require('passport');
 const router = require("./controller/router");
 // Passport Config
-require('./config/passport')(passport);
+// require('./config/passport')(passport);
 
 var bodyParser = require("body-parser");
 app.use(bodyParser.json());
