@@ -9,21 +9,188 @@ const bcrypt=require('bcryptjs');
 
 
 
-let fileName = null;
 //set storage engine for avatar
-const storager = multer.diskStorage({
-  destination: "public/uploads/avatars",
-  filename: (req, file, cb) => {
-    fileName = "av." + Date.now() + path.extname(file.originalname);
-    cb(null, fileName);
+const storage = multer.diskStorage({
+  destination:  (req, file, cb) => {
+  cb(null, 'public/uploads/avatars')
+  },
+  filename:  (req, file, cb) => {
+    cb(null, Date.now() + '-' +file.originalname )
   }
-});
-
+})
 //init upload for avatar
-const upload = multer({
-  storage: storager
-}).single("avatar");
+const upload = multer({ storage: storage }).single('file');
 
+exports.newUser = (req, res) => {
+  const { name, email, password, password2 } = req.body;
+  let errors = [];
+
+  // if (!name || !email || !password || !password2) {
+  //   errors.push({ msg: "Passwords do not match" });
+  // }
+
+  if (password.length < 6) {
+    errors.push({ msg: "Password must be at least 6 characters" });
+  }
+
+  if (errors.length > 0) {
+    res.json({
+      status: "error",
+      errors,
+      name,
+      email,
+      password,
+      password2
+    });
+  } else {
+    Users.findOne({ email: email }).then(user => {
+      if (user) {
+        errors.push({ msg: "Email already exists" });
+        res.json({
+          status: "error",
+          errors,
+          name,
+          email,
+          password,
+          password2
+        });
+      } else {
+        // if there is no exists email add new user
+        const newUser = new Users({
+          name,
+          email,
+          password
+        });
+
+        // hash passport
+        // genSalt is a method for bcrypt and 10 is number of characters
+        bcrypt.genSalt(10, (err, salt) => {
+          bcrypt.hash(newUser.password, salt, (err, hash) => {
+            if (err) throw err;
+            // set password to hashed
+            newUser.password = hash;
+            // save user
+            newUser
+              .save()
+              .then(user => {
+                res.json({
+                  status: "success"
+                });
+              })
+              .catch(err => res.json({ status: "error", errors: err }));
+          });
+        });
+      }
+    });
+  }
+};
+exports.loginUser = (req, res) =>{
+  const { email, password } = req.body;
+  let errors = [];
+  if (!email ) {
+    errors.push({ msg: "Enter email address" });
+  }
+  if(password.trim().length < 6){
+    errors.push({ msg: "Password must be at least 6 characters" });
+    res.json({
+      status: "error",
+      errors
+    });
+  }else{
+    Users.findOne({email: email})
+      .then(user => {
+        if (!user) {
+          errors.push({msg: "That email is not registered" })
+           res.json({
+              status: "error",
+              errors
+            });
+        }else{
+        // Match password
+        // compare existing passport and user passports
+        bcrypt.compare(password, user.password, (err, isMatch) => {
+          if (err){ 
+            errors.push({msg: "Something happend with server please try again!"});
+            res.json({
+              status: "error",
+              errors
+            })
+          }
+          if (isMatch) {
+            console.log(user['_doc']);
+            res.json({
+              status: "success",
+              id: user['_doc']._id,
+              name : user['_doc'].name,
+              email: user['_doc'].email,
+              date: user['_doc'].date
+            })
+          } else {
+            errors.push({ msg: "Password incorrect" });
+            res.json({
+              status: "error",
+              errors
+            })
+          }
+        });
+      }
+  });
+}
+}
+exports.uploadAvatar = (req, res) =>{
+  upload(req, res, (err) => {
+    let errors = [];
+    let fileName = req.file.filename;
+    //check if there is a photo
+    if (fileName) {
+      //On here we will process the image resizing
+      jimp.read("public/uploads/avatars/" + fileName, (err, file) => {
+        if (err) {
+          errors.push("something happened while uploading picture");
+          res.json({
+            status: "error",
+            errors
+          })
+        }
+        file
+          .resize(250, 250) //resize
+          .quality(60) // set the quality of image
+          .write("public/uploads/avatars/" + fileName); //save
+      });
+      res.json({
+        status: "success",
+        avatar: fileName
+      })
+    }
+  });
+}
+exports.newContact = (req, res) => {
+  let errors = [];
+    let newContact = {
+      userID: req.body.userID,
+      name: req.body.name,
+      email: req.body.email,
+      avatar: req.body.avatar
+    };
+    //mongo goes here...
+    contacts.create(newContact, (err, contacts) => {
+      if (err) {
+    console.log(contacts, err);
+        errors.push({msg: "Something happened while creating contact please try again"});
+        res.json({
+          status: "error",
+          errors
+        })
+      }
+      else{
+        console.log(contacts)
+        res.json({
+          status: "success",
+          newContactData: newContact
+        })
+      }
+    });
+};
 // //set storage engine for email
 // const attachStorager = multer.diskStorage({
 //   destination: "public/uploads/attachments",
@@ -144,160 +311,3 @@ const upload = multer({
 //   });
 // };
 
-exports.newUser = (req, res) => {
-  const { name, email, password, password2 } = req.body;
-  let errors = [];
-
-  // if (!name || !email || !password || !password2) {
-  //   errors.push({ msg: "Passwords do not match" });
-  // }
-
-  if (password.length < 6) {
-    errors.push({ msg: "Password must be at least 6 characters" });
-  }
-
-  if (errors.length > 0) {
-    res.json({
-      status: "error",
-      errors,
-      name,
-      email,
-      password,
-      password2
-    });
-  } else {
-    Users.findOne({ email: email }).then(user => {
-      if (user) {
-        errors.push({ msg: "Email already exists" });
-        res.json({
-          status: "error",
-          errors,
-          name,
-          email,
-          password,
-          password2
-        });
-      } else {
-        // if there is no exists email add new user
-        const newUser = new Users({
-          name,
-          email,
-          password
-        });
-
-        // hash passport
-        // genSalt is a method for bcrypt and 10 is number of characters
-        bcrypt.genSalt(10, (err, salt) => {
-          bcrypt.hash(newUser.password, salt, (err, hash) => {
-            if (err) throw err;
-            // set password to hashed
-            newUser.password = hash;
-            // save user
-            newUser
-              .save()
-              .then(user => {
-                res.json({
-                  status: "success"
-                });
-              })
-              .catch(err => res.json({ status: "error", errors: err }));
-          });
-        });
-      }
-    });
-  }
-};
-exports.loginUser = (req, res) =>{
-  const { email, password } = req.body;
-  let errors = [];
-  if (!email ) {
-    errors.push({ msg: "Enter email address" });
-  }
-  if(password.trim().length < 6){
-    errors.push({ msg: "Password must be at least 6 characters" });
-    res.json({
-      status: "error",
-      errors
-    });
-  }else{
-    Users.findOne({email: email})
-      .then(user => {
-        if (!user) {
-          errors.push({msg: "That email is not registered" })
-           res.json({
-              status: "error",
-              errors
-            });
-        }else{
-        // Match password
-        // compare existing passport and user passports
-        bcrypt.compare(password, user.password, (err, isMatch) => {
-          if (err){ 
-            errors.push({msg: "Something happend with server please try again!"});
-            res.json({
-              status: "error",
-              errors
-            })
-          }
-          if (isMatch) {
-            console.log(user['_doc']);
-            res.json({
-              status: "success",
-              id: user['_doc']._id,
-              name : user['_doc'].name,
-              email: user['_doc'].email,
-              date: user['_doc'].date
-            })
-          } else {
-            errors.push({ msg: "Password incorrect" });
-            res.json({
-              status: "error",
-              errors
-            })
-          }
-        });
-      }
-  });
-}
-}
-
-exports.newContact = (req, res) => {
-  let errors = [];
-  upload(req, res, () => {
-    const newImage = new Image({
-      imageName: req.body.imageName,
-      imageData: req.file.path
-  });
-    console.log(req.body)
-    console.log(newImage);
-    //check if there is a photo
-    if (fileName == null) {
-      fileName = "av.default.png";
-    } else {
-      //On here we will process the image resizing
-      jimp.read("public/uploads/avatars/" + fileName, (err, file) => {
-        if (err) throw err;
-        file
-          .resize(250, 250) //resize
-          .quality(60) // set the quality of image
-          .write("public/uploads/avatars/" + fileName); //save
-      });
-    }
-    let newContact = {
-      userID: req.body.userID,
-      name: req.body.name,
-      mail: req.body.email,
-      avatar: fileName
-    };
-    //mongo goes here...
-    contacts.create(newContact, (err, contacts) => {
-      if (err) {errors.push({msg: "Something happened while creating contact please try again"})}
-      else
-        console.log(
-          `Congrads! Your new contact inserted:${JSON.stringify(newContact)}`
-        );
-    });
-
-    fileName = null;
-  });
-};

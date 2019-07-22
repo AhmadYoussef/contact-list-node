@@ -4,6 +4,7 @@ const express = require("express");
 const app = express();
 const router = require("./controller/router");
 const bodyParser = require("body-parser");
+const cors = require('cors');
 
 
 app.use(bodyParser.json());
@@ -13,6 +14,7 @@ app.use(
   })
 );
 app.use(express.static("public"));
+app.use(cors());
 app.use("/", router);
 
 const PORT = process.env.PORT || 5000;

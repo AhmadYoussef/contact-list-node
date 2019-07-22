@@ -1,10 +1,6 @@
 const connection = require('./connection');
 
 const ContactSchema = new connection.Schema({
-    ID:{
-        type:String,
-        required: true,
-    },    
     name:{
         type:String,
         required: true,
@@ -21,6 +17,6 @@ const ContactSchema = new connection.Schema({
     }
 });
 
-const ContactList= connection.model('ContactList', ContactSchema);
+const ContactList= connection.model('contactlists', ContactSchema);
 
 module.exports= ContactList;
