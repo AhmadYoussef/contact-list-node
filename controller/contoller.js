@@ -1,12 +1,9 @@
-const multer = require("multer");
-const path = require("path");
+const multer = require('multer');
+const path = require('path');
 // const jimp = require("jimp");
 // const nodemailer = require("nodemailer");
-const Users = require("../model/users");
-const bcrypt=require('bcryptjs');
-
-
-
+const Users = require('../model/users');
+const bcrypt = require('bcryptjs');
 
 // let fileName = null;
 // //set storage engine for avatar
@@ -176,118 +173,117 @@ const bcrypt=require('bcryptjs');
 // };
 
 exports.newUser = (req, res) => {
-  const { name, email, password, password2 } = req.body;
-  let errors = [];
+	const { name, email, password, password2 } = req.body;
+	let errors = [];
 
-  // if (!name || !email || !password || !password2) {
-  //   errors.push({ msg: "Passwords do not match" });
-  // }
+	// if (!name || !email || !password || !password2) {
+	//   errors.push({ msg: "Passwords do not match" });
+	// }
 
-  if (password.length < 6) {
-    errors.push({ msg: "Password must be at least 6 characters" });
-  }
+	if (password.length < 6) {
+		errors.push({ msg: 'Password must be at least 6 characters' });
+	}
 
-  if (errors.length > 0) {
-    res.json({
-      status: "error",
-      errors,
-      name,
-      email,
-      password,
-      password2
-    });
-  } else {
-    Users.findOne({ email: email }).then(user => {
-      if (user) {
-        errors.push({ msg: "Email already exists" });
-        res.json({
-          status: "error",
-          errors,
-          name,
-          email,
-          password,
-          password2
-        });
-      } else {
-        // if there is no exists email add new user
-        const newUser = new Users({
-          name,
-          email,
-          password
-        });
+	if (errors.length > 0) {
+		res.json({
+			status: 'error',
+			errors,
+			name,
+			email,
+			password,
+			password2
+		});
+	} else {
+		Users.findOne({ email: email }).then((user) => {
+			if (user) {
+				errors.push({ msg: 'Email already exists' });
+				res.json({
+					status: 'error',
+					errors,
+					name,
+					email,
+					password,
+					password2
+				});
+			} else {
+				// if there is no exists email add new user
+				const newUser = new Users({
+					name,
+					email,
+					password
+				});
 
-        // hash passport
-        // genSalt is a method for bcrypt and 10 is number of characters
-        bcrypt.genSalt(10, (err, salt) => {
-          bcrypt.hash(newUser.password, salt, (err, hash) => {
-            if (err) throw err;
-            // set password to hashed
-            newUser.password = hash;
-            // save user
-            newUser
-              .save()
-              .then(user => {
-                res.json({
-                  status: "success"
-                });
-              })
-              .catch(err => res.json({ status: "error", errors: err }));
-          });
-        });
-      }
-    });
-  }
+				// hash passport
+				// genSalt is a method for bcrypt and 10 is number of characters
+				bcrypt.genSalt(10, (err, salt) => {
+					bcrypt.hash(newUser.password, salt, (err, hash) => {
+						if (err) throw err;
+						// set password to hashed
+						newUser.password = hash;
+						// save user
+						newUser
+							.save()
+							.then((user) => {
+								res.json({
+									status: 'success'
+								});
+							})
+							.catch((err) => res.json({ status: 'error', errors: err }));
+					});
+				});
+			}
+		});
+	}
 };
-exports.loginUser = (req, res) =>{
-  const { email, password } = req.body;
-  let errors = [];
-  if (!email ) {
-    errors.push({ msg: "Enter email address" });
-  }
-  if(password.trim().length < 6){
-    errors.push({ msg: "Password must be at least 6 characters" });
-    res.json({
-      status: "error",
-      errors
-    });
-  }else{
-    Users.findOne({email: email})
-      .then(user => {
-        if (!user) {
-          errors.push({msg: "That email is not registered" })
-           res.json({
-              status: "error",
-              errors
-            });
-        }else{
-        // Match password
-        // compare existing passport and user passports
-        bcrypt.compare(password, user.password, (err, isMatch) => {
-          if (err){ 
-            errors.push({msg: "Something happend with server please try again!"});
-            res.json({
-              status: "error",
-              errors
-            })
-          }
-          if (isMatch) {
-            console.log(user['_doc']);
-            res.json({
-              status: "success",
-              id: user['_doc']._id,
-              name : user['_doc'].name,
-              email: user['_doc'].email,
-              date: user['_doc'].date
-            })
-          } else {
-            errors.push({ msg: "Password incorrect" });
-            res.json({
-              status: "error",
-              errors
-            })
-          }
-        });
-      }
-  });
-}
-}
+exports.loginUser = (req, res) => {
+	const { email, password } = req.body;
+	let errors = [];
+	if (!email) {
+		errors.push({ msg: 'Enter email address' });
+	}
+	if (password.trim().length < 6) {
+		errors.push({ msg: 'Password must be at least 6 characters' });
+		res.json({
+			status: 'error',
+			errors
+		});
+	} else {
+		Users.findOne({ email: email }).then((user) => {
+			if (!user) {
+				errors.push({ msg: 'That email is not registered' });
+				res.json({
+					status: 'error',
+					errors
+				});
+			} else {
+				// Match password
+				// compare existing passport and user passports
+				bcrypt.compare(password, user.password, (err, isMatch) => {
+					if (err) {
+						errors.push({ msg: 'Something happend with server please try again!' });
+						res.json({
+							status: 'error',
+							errors
+						});
+					}
+					if (isMatch) {
+						console.log(user['_doc']);
+						res.json({
+							status: 'success',
+							id: user['_doc']._id,
+							name: user['_doc'].name,
+							email: user['_doc'].email,
+							date: user['_doc'].date
+						});
+					} else {
+						errors.push({ msg: 'Password incorrect' });
+						res.json({
+							status: 'error',
+							errors
+						});
+					}
+				});
+			}
+		});
+	}
+};
