@@ -1,176 +1,22 @@
 const multer = require('multer');
 const path = require('path');
-// const jimp = require("jimp");
+const jimp = require('jimp');
 // const nodemailer = require("nodemailer");
 const Users = require('../model/users');
+const contacts = require('../model/contact-list');
 const bcrypt = require('bcryptjs');
 
-// let fileName = null;
-// //set storage engine for avatar
-// const storager = multer.diskStorage({
-//   destination: "public/uploads/avatars",
-//   filename: (req, file, cb) => {
-//     fileName = "av." + Date.now() + path.extname(file.originalname);
-//     cb(null, fileName);
-//   }
-// });
-
-// //init upload for avatar
-// const upload = multer({
-//   storage: storager
-// }).single("avatar");
-
-// //set storage engine for email
-// const attachStorager = multer.diskStorage({
-//   destination: "public/uploads/attachments",
-//   filename: (req, file, cb) => {
-//     fileName = "at." + Date.now() + path.extname(file.originalname);
-//     cb(null, fileName);
-//   }
-// });
-
-// //init upload for email
-// const attachUpload = multer({
-//   storage: attachStorager
-// }).single("attach");
-
-// exports.homeRoute = (req, res) => {
-//   contacts.find({}, (err, result) => {
-//     if (err) {
-//       console.log(err);
-//     } else {
-//       res.render("index", { contactData: result });
-//     }
-//   });
-// };
-
-// exports.newContact = (req, res) => {
-//   upload(req, res, () => {
-//     //check if there is a photo
-//     if (fileName == null) {
-//       fileName = "av.default.png";
-//     } else {
-//       //On here we will process the image resizing
-//       jimp.read("public/uploads/avatars/" + fileName, (err, file) => {
-//         if (err) throw err;
-//         file
-//           .resize(250, 250) //resize
-//           .quality(60) // set the quality of image
-//           .write("public/uploads/avatars/" + fileName); //save
-//       });
-//     }
-//     let newContact = {
-//       name: req.body.name,
-//       mail: req.body.email,
-//       avatar: fileName
-//     };
-//     //mongo goes here...
-//     contacts.create(newContact, (err, contacts) => {
-//       if (err) console.log(err);
-//       else
-//         console.log(
-//           `Congrads! Your new contact inserted:${JSON.stringify(newContact)}`
-//         );
-//     });
-
-//     fileName = null;
-//     res.redirect("/");
-//   });
-// };
-
-// //This function gets the ID and delete contact from contactList array
-// exports.deleteContact = (req, res) => {
-//   //const {id} = req.params;
-//   //console.log(id);
-
-//   contacts.findOneAndRemove({ _id: req.params.id }, (err, result) => {
-//     if (err) console.log(err);
-//     else console.log(result);
-//   });
-
-//   res.redirect("/");
-// };
-
-// exports.sendMail = (req, res) => {
-//   attachUpload(req, res, () => {
-//     // create reusable transporter object using the default SMTP transport
-//     let transporter = nodemailer.createTransport({
-//       service: "gmail",
-//       auth: {
-//         user: req.body.user, // generated ethereal user
-//         pass: req.body.pass // generated ethereal password
-//       }
-//     });
-
-//     // send mail with defined transport object
-//     let info = {
-//       from: '"FBW6 Contact List Project 👻" <fb6@dci.com>', // sender address
-//       to: req.body.to, // list of receivers
-//       cc: req.body.cc,
-//       subject: req.body.subject, // Subject line
-//       html: "<b>" + req.body.message + "</b>", // html body
-//       attachments: [
-//         {
-//           filename: fileName,
-//           path: "public/uploads/attachments/" + fileName
-//         }
-//       ]
-//     };
-
-//     transporter.sendMail(info, (err, info) => {
-//       if (err) {
-//         console.log(err);
-//       } else {
-//         console.log("Message sent to : " + info.messageId);
-//       }
-//     });
-
-//     fileName = null;
-//     res.redirect("/");
-//   });
-// };
-
-// exports.updateContact = (req, res) => {
-//   upload(req, res, () => {
-//     console.log(req.body);
-
-//     //mongo goes here...
-//     let updatedContact = {};
-//     if (req.body.name != "") {
-//       updatedContact.name = req.body.name;
-//     }
-
-//     if (req.body.email != "") {
-//       updatedContact.mail = req.body.email;
-//     }
-
-//     if (fileName != null) {
-//       updatedContact.avatar = fileName;
-//       console.log(fileName);
-//       //On here we will process the image resizing
-//       jimp.read("public/uploads/avatars/" + fileName, (err, file) => {
-//         if (err) throw err;
-//         file
-//           .resize(250, 250) //resize
-//           .quality(60) // set the quality of image
-//           .write("public/uploads/avatars/" + fileName); //save
-//       });
-//     }
-
-//     if (updatedContact != {}) {
-//       contacts.updateOne(
-//         { _id: req.body.id },
-//         { $set: updatedContact },
-//         (err, result) => {
-//           if (err) console.log(err);
-//           else console.log(result);
-//         }
-//       );
-//       fileName = null;
-//     }
-//     res.redirect("/");
-//   });
-// };
+//set storage engine for avatar
+const storage = multer.diskStorage({
+	destination: (req, file, cb) => {
+		cb(null, 'public/uploads/avatars');
+	},
+	filename: (req, file, cb) => {
+		cb(null, Date.now() + '-' + file.originalname);
+	}
+});
+//init upload for avatar
+const upload = multer({ storage: storage }).single('file');
 
 exports.newUser = (req, res) => {
 	const { name, email, password, password2 } = req.body;
@@ -287,3 +133,173 @@ exports.loginUser = (req, res) => {
 		});
 	}
 };
+exports.uploadAvatar = (req, res) => {
+	upload(req, res, (err) => {
+		let errors = [];
+		let fileName = req.file.filename;
+		//check if there is a photo
+		if (fileName) {
+			//On here we will process the image resizing
+			jimp.read('public/uploads/avatars/' + fileName, (err, file) => {
+				if (err) {
+					errors.push('something happened while uploading picture');
+					res.json({
+						status: 'error',
+						errors
+					});
+				}
+				file
+					.resize(250, 250) //resize
+					.quality(60) // set the quality of image
+					.write('public/uploads/avatars/' + fileName); //save
+			});
+			res.json({
+				status: 'success',
+				avatar: fileName
+			});
+		}
+	});
+};
+exports.newContact = (req, res) => {
+	let errors = [];
+	let newContact = {
+		userID: req.body.userID,
+		name: req.body.name,
+		email: req.body.email,
+		avatar: req.body.avatar
+	};
+	//mongo goes here...
+	contacts.create(newContact, (err, contacts) => {
+		if (err) {
+			console.log(contacts, err);
+			errors.push({ msg: 'Something happened while creating contact please try again' });
+			res.json({
+				status: 'error',
+				errors
+			});
+		} else {
+			console.log(contacts);
+			res.json({
+				status: 'success',
+				newContactData: newContact
+			});
+		}
+	});
+};
+// //set storage engine for email
+// const attachStorager = multer.diskStorage({
+//   destination: "public/uploads/attachments",
+//   filename: (req, file, cb) => {
+//     fileName = "at." + Date.now() + path.extname(file.originalname);
+//     cb(null, fileName);
+//   }
+// });
+
+// //init upload for email
+// const attachUpload = multer({
+//   storage: attachStorager
+// }).single("attach");
+
+// exports.homeRoute = (req, res) => {
+//   contacts.find({}, (err, result) => {
+//     if (err) {
+//       console.log(err);
+//     } else {
+//       res.render("index", { contactData: result });
+//     }
+//   });
+// };
+
+// //This function gets the ID and delete contact from contactList array
+// exports.deleteContact = (req, res) => {
+//   //const {id} = req.params;
+//   //console.log(id);
+
+//   contacts.findOneAndRemove({ _id: req.params.id }, (err, result) => {
+//     if (err) console.log(err);
+//     else console.log(result);
+//   });
+
+//   res.redirect("/");
+// };
+
+// exports.sendMail = (req, res) => {
+//   attachUpload(req, res, () => {
+//     // create reusable transporter object using the default SMTP transport
+//     let transporter = nodemailer.createTransport({
+//       service: "gmail",
+//       auth: {
+//         user: req.body.user, // generated ethereal user
+//         pass: req.body.pass // generated ethereal password
+//       }
+//     });
+
+//     // send mail with defined transport object
+//     let info = {
+//       from: '"FBW6 Contact List Project 👻" <fb6@dci.com>', // sender address
+//       to: req.body.to, // list of receivers
+//       cc: req.body.cc,
+//       subject: req.body.subject, // Subject line
+//       html: "<b>" + req.body.message + "</b>", // html body
+//       attachments: [
+//         {
+//           filename: fileName,
+//           path: "public/uploads/attachments/" + fileName
+//         }
+//       ]
+//     };
+
+//     transporter.sendMail(info, (err, info) => {
+//       if (err) {
+//         console.log(err);
+//       } else {
+//         console.log("Message sent to : " + info.messageId);
+//       }
+//     });
+
+//     fileName = null;
+//     res.redirect("/");
+//   });
+// };
+
+// exports.updateContact = (req, res) => {
+//   upload(req, res, () => {
+//     console.log(req.body);
+
+//     //mongo goes here...
+//     let updatedContact = {};
+//     if (req.body.name != "") {
+//       updatedContact.name = req.body.name;
+//     }
+
+//     if (req.body.email != "") {
+//       updatedContact.mail = req.body.email;
+//     }
+
+//     if (fileName != null) {
+//       updatedContact.avatar = fileName;
+//       console.log(fileName);
+//       //On here we will process the image resizing
+//       jimp.read("public/uploads/avatars/" + fileName, (err, file) => {
+//         if (err) throw err;
+//         file
+//           .resize(250, 250) //resize
+//           .quality(60) // set the quality of image
+//           .write("public/uploads/avatars/" + fileName); //save
+//       });
+//     }
+
+//     if (updatedContact != {}) {
+//       contacts.updateOne(
+//         { _id: req.body.id },
+//         { $set: updatedContact },
+//         (err, result) => {
+//           if (err) console.log(err);
+//           else console.log(result);
+//         }
+//       );
+//       fileName = null;
+//     }
+//     res.redirect("/");
+//   });
+// };

@@ -4,7 +4,9 @@ const controller = require("./contoller");
 
 // router.get("/", controller.homeRoute);
 
-// router.post("/newContact", controller.newContact);
+router.post("/newContact", controller.newContact);
+
+router.post("/uploadAvatar", controller.uploadAvatar);
 
 // router.get("/deleteContact/:id", controller.deleteContact);
 

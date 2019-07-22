@@ -19,6 +19,6 @@ let usersSchema = new connection.Schema({
   }
 });
 
-let users = connection.model("Users", usersSchema);
+let users = connection.model("users", usersSchema);
 
 module.exports = users;
