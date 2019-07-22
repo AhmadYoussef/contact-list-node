@@ -12,7 +12,7 @@ app.use(
     extended: true
   })
 );
-// app.use(express.static("public"));
+app.use(express.static("public"));
 app.use("/", router);
 
 const PORT = process.env.PORT || 5000;

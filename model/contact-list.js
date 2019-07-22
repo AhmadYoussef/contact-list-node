@@ -1,6 +1,6 @@
 const connection = require('./connection');
 
-const ContactSchema = new mongoose.Schema({
+const ContactSchema = new connection.Schema({
     ID:{
         type:String,
         required: true,

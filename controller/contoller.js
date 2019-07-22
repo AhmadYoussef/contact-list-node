@@ -1,27 +1,28 @@
 const multer = require("multer");
 const path = require("path");
-// const jimp = require("jimp");
+const jimp = require("jimp");
 // const nodemailer = require("nodemailer");
 const Users = require("../model/users");
+const contacts= require("../model/contact-list");
 const bcrypt=require('bcryptjs');
 
 
 
 
-// let fileName = null;
-// //set storage engine for avatar
-// const storager = multer.diskStorage({
-//   destination: "public/uploads/avatars",
-//   filename: (req, file, cb) => {
-//     fileName = "av." + Date.now() + path.extname(file.originalname);
-//     cb(null, fileName);
-//   }
-// });
+let fileName = null;
+//set storage engine for avatar
+const storager = multer.diskStorage({
+  destination: "public/uploads/avatars",
+  filename: (req, file, cb) => {
+    fileName = "av." + Date.now() + path.extname(file.originalname);
+    cb(null, fileName);
+  }
+});
 
-// //init upload for avatar
-// const upload = multer({
-//   storage: storager
-// }).single("avatar");
+//init upload for avatar
+const upload = multer({
+  storage: storager
+}).single("avatar");
 
 // //set storage engine for email
 // const attachStorager = multer.diskStorage({
@@ -47,39 +48,7 @@ const bcrypt=require('bcryptjs');
 //   });
 // };
 
-// exports.newContact = (req, res) => {
-//   upload(req, res, () => {
-//     //check if there is a photo
-//     if (fileName == null) {
-//       fileName = "av.default.png";
-//     } else {
-//       //On here we will process the image resizing
-//       jimp.read("public/uploads/avatars/" + fileName, (err, file) => {
-//         if (err) throw err;
-//         file
-//           .resize(250, 250) //resize
-//           .quality(60) // set the quality of image
-//           .write("public/uploads/avatars/" + fileName); //save
-//       });
-//     }
-//     let newContact = {
-//       name: req.body.name,
-//       mail: req.body.email,
-//       avatar: fileName
-//     };
-//     //mongo goes here...
-//     contacts.create(newContact, (err, contacts) => {
-//       if (err) console.log(err);
-//       else
-//         console.log(
-//           `Congrads! Your new contact inserted:${JSON.stringify(newContact)}`
-//         );
-//     });
 
-//     fileName = null;
-//     res.redirect("/");
-//   });
-// };
 
 // //This function gets the ID and delete contact from contactList array
 // exports.deleteContact = (req, res) => {
@@ -291,3 +260,44 @@ exports.loginUser = (req, res) =>{
   });
 }
 }
+
+exports.newContact = (req, res) => {
+  let errors = [];
+  upload(req, res, () => {
+    const newImage = new Image({
+      imageName: req.body.imageName,
+      imageData: req.file.path
+  });
+    console.log(req.body)
+    console.log(newImage);
+    //check if there is a photo
+    if (fileName == null) {
+      fileName = "av.default.png";
+    } else {
+      //On here we will process the image resizing
+      jimp.read("public/uploads/avatars/" + fileName, (err, file) => {
+        if (err) throw err;
+        file
+          .resize(250, 250) //resize
+          .quality(60) // set the quality of image
+          .write("public/uploads/avatars/" + fileName); //save
+      });
+    }
+    let newContact = {
+      userID: req.body.userID,
+      name: req.body.name,
+      mail: req.body.email,
+      avatar: fileName
+    };
+    //mongo goes here...
+    contacts.create(newContact, (err, contacts) => {
+      if (err) {errors.push({msg: "Something happened while creating contact please try again"})}
+      else
+        console.log(
+          `Congrads! Your new contact inserted:${JSON.stringify(newContact)}`
+        );
+    });
+
+    fileName = null;
+  });
+};
