@@ -14,7 +14,7 @@ router.get('/deleteContact/:id', controller.deleteContact);
 
 router.post('/sendMail', controller.sendMail);
 
-// router.post("/updateContact", controller.updateContact);
+router.post("/updateContact", controller.updateContact);
 
 router.post('/newUser', controller.newUser);
 
