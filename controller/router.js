@@ -8,6 +8,8 @@ router.post("/newContact", controller.newContact);
 
 router.post("/uploadAvatar", controller.uploadAvatar);
 
+router.get("/getContactList/:id", controller.getContactList);
+
 // router.get("/deleteContact/:id", controller.deleteContact);
 
 // router.post("/sendMail", controller.sendMail);
