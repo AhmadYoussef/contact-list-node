@@ -227,6 +227,58 @@ exports.deleteContact = (req, res) => {
     }
   });
 };
+exports.updateContact = (req, res) => {
+  // upload(req, res, () => {
+    console.log(req.body);
+    let errors = [];
+
+    //mongo goes here...
+    let updatedContact = {};
+    if (req.body.name != "") {
+      updatedContact.name = req.body.name;
+    }
+
+    if (req.body.email != "") {
+      updatedContact.mail = req.body.email;
+    }
+
+    // if (fileName != null) {
+    //   updatedContact.avatar = fileName;
+    //   console.log(fileName);
+    //   //On here we will process the image resizing
+    //   jimp.read("public/uploads/avatars/" + fileName, (err, file) => {
+    //     if (err) throw err;
+    //     file
+    //       .resize(250, 250) //resize
+    //       .quality(60) // set the quality of image
+    //       .write("public/uploads/avatars/" + fileName); //save
+    //   });
+    // }
+
+    if (updatedContact != {}) {
+      contacts.updateOne({ _id: req.body.id },{ $set: updatedContact },(err, result) => {
+          if (err) {
+            res.json({
+              status: "error",
+              errors: {msg: "something went wrong!"}
+            })
+          }
+          else {
+            console.log(result)
+            res.json({
+              status: "success"
+            });
+          }
+        }
+      );
+      // fileName = null;
+    // }
+    // res.redirect("/");
+  }
+  // )
+
+};
+
 // //set storage engine for email
 // const attachStorager = multer.diskStorage({
 //   destination: "public/uploads/attachments",
@@ -295,45 +347,4 @@ exports.deleteContact = (req, res) => {
 //   });
 // };
 
-// exports.updateContact = (req, res) => {
-//   upload(req, res, () => {
-//     console.log(req.body);
-
-//     //mongo goes here...
-//     let updatedContact = {};
-//     if (req.body.name != "") {
-//       updatedContact.name = req.body.name;
-//     }
-
-//     if (req.body.email != "") {
-//       updatedContact.mail = req.body.email;
-//     }
-
-//     if (fileName != null) {
-//       updatedContact.avatar = fileName;
-//       console.log(fileName);
-//       //On here we will process the image resizing
-//       jimp.read("public/uploads/avatars/" + fileName, (err, file) => {
-//         if (err) throw err;
-//         file
-//           .resize(250, 250) //resize
-//           .quality(60) // set the quality of image
-//           .write("public/uploads/avatars/" + fileName); //save
-//       });
-//     }
-
-//     if (updatedContact != {}) {
-//       contacts.updateOne(
-//         { _id: req.body.id },
-//         { $set: updatedContact },
-//         (err, result) => {
-//           if (err) console.log(err);
-//           else console.log(result);
-//         }
-//       );
-//       fileName = null;
-//     }
-//     res.redirect("/");
-//   });
-// };
 
