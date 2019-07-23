@@ -186,10 +186,31 @@ exports.newContact = (req, res) => {
         console.log(contacts)
         res.json({
           status: "success",
-          newContactData: newContact
+          newContactData: contacts
         })
       }
     });
+};
+exports.getContactList = (req, res) => {
+  const {id} = req.params;
+  console.log(id);
+
+  contacts.find({ userID: req.params.id }, (err, result) => {
+    if (err) {
+      console.log("sss",err);
+      res.json({
+        status: "error",
+        error: {msg: "Something went wrong while geting the data please refresh the page again"}
+      })
+    }
+    else {
+      console.log("rrr",result);
+      res.json({
+        status: "success",
+        newContactData: result
+      })
+    }
+  });
 };
 // //set storage engine for email
 // const attachStorager = multer.diskStorage({
