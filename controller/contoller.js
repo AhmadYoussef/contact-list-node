@@ -212,6 +212,21 @@ exports.getContactList = (req, res) => {
     }
   });
 };
+exports.deleteContact = (req, res) => {
+  contacts.findOneAndRemove({ _id: req.params.id }, (err, result) => {
+    if (err) {
+      res.json({
+        status: "error",
+        errors: {msg: "something went wrong!"}
+      })
+    }
+    else {
+      res.json({
+        status: "success"
+      })
+    }
+  });
+};
 // //set storage engine for email
 // const attachStorager = multer.diskStorage({
 //   destination: "public/uploads/attachments",
@@ -239,17 +254,7 @@ exports.getContactList = (req, res) => {
 
 
 // //This function gets the ID and delete contact from contactList array
-// exports.deleteContact = (req, res) => {
-//   //const {id} = req.params;
-//   //console.log(id);
 
-//   contacts.findOneAndRemove({ _id: req.params.id }, (err, result) => {
-//     if (err) console.log(err);
-//     else console.log(result);
-//   });
-
-//   res.redirect("/");
-// };
 
 // exports.sendMail = (req, res) => {
 //   attachUpload(req, res, () => {
